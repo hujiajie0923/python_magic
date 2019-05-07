@@ -1,92 +1,89 @@
-import tkinter as tk
-import requests
+import time
+import datetime
 import re
 import json
-from requests.exceptions import RequestException
+import requests
+from requests.exceptions import ReadTimeout, ConnectionError, RequestException
+from multiprocessing import Pool
+from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
+from requests.auth import HTTPBasicAuth
+
+GET = 'get'
+POST = 'post'
 
 
-def display_info(func):
-    def wrapper(*args, **kwargs):
-        root = tk.Tk()
-        root.title('Total URL:')
+class Crawler(object):
 
-        text = tk.Text(root)
-        text.grid(row=0, column=1)
-        tk.Button(root, text='关闭', command=quit).grid(row=1, column=1)
+    def __init__(self, url=''):
+        self.base_url = url
 
-        msg = func(*args, **kwargs)
-
-        if msg:
-            if isinstance(msg, (list, tuple)):
-                for index, line in enumerate(msg):
-                    text.insert(tk.END, 'line {}'.format(index+1) + ': \n' + str(line) + '\n\n')
+    def get_web_page(self, url=None, purpose=GET):
+        url = url or self.base_url
+        # TODO 使用随机请求头
+        # ua = UserAgent(use_cache_server=False)
+        # headers = {'User-Agent': ua.random}
+        headers = {
+            # 使用谷歌浏览器请求头
+            "User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                          '(KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36'
+        }
+        params = {
+            # 请求体内容
+            "wd": 'python'
+        }
+        # TODO 使用代理突破限制IP访问频率
+        # proxies = {
+        #     "http": "http://10.10.1.10:3128",
+        #     "https": "http://10.10.1.10:1080",
+        # }
+        try:
+            # TODO 使用Session保持会话状态
+            # s = requests.Session()
+            # response = requests.get(self.base_url)
+            # TODO 登陆网站时需要输入账户密码则调用auth参数传入即可
+            # response = requests.get(self.base_url, auth=HTTPBasicAuth('username', 'password'))
+            if purpose == GET:
+                response = requests.get(url, headers=headers, params=params, timeout=5)
             else:
-                text.insert(tk.END, str(msg))
+                response = requests.post(url, headers=headers, data=params, timeout=5)
 
-            # 让GUI始终处于居中位置
-            root.update_idletasks()
-            x = (root.winfo_screenwidth() - root.winfo_reqwidth()) / 2
-            y = (root.winfo_screenwidth() - root.winfo_reqwidth()) / 2
-            root.geometry('+%d+%d' % (x, y))
-            root.mainloop()
-    return wrapper
-
-
-def record_json_data(msg=None, do_read=False):
-    if do_read:
-        with open('json_file.json', 'r', encoding='utf-8') as wf:
-            read_file = wf.read()
-            file = json.loads(read_file)
-            print('find json data:\n', file)
-            print('find json data down, total: {}'.format(len(file)))
-            return file
-    with open('json_file.json', 'a', encoding='utf-8') as wf:
-        wf.write(json.dumps(msg, ensure_ascii=False, indent=2) + '\n')
-
-
-def get_web_page(url):
-    # 使用随机请求头
-    # ua = UserAgent(use_cache_server=False)
-    # headers = {"User-Agent": ua.random}
-    headers = {
-        "User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-                      '(KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36'
-    }
-    try:
-        response = requests.get(url, headers=headers)
-        if response.status_code == 200:
-            return response.text
-        else:
+            if response.status_code == 200:
+                return response
+                # response.text # 网页源码 [type: str]
+                # response.headers # 头部信息 [type: dict]
+                # response.json() # json格式 [type: json]
+                # response.content # 二进制数据 [type: bytes]
+                # response.cookies # 网页cookies [type: dict]
+                # response.history # 访问的历史记录 [type: list]
+            else:
+                return None
+        except ReadTimeout:  # 访问超时错误
+            print('the url ({}) Time out'.format(self.base_url))
             return None
-    except RequestException:
-        return None
+        except ConnectionError:  # 网络连接中断错误
+            print('the url ({}) Connect error'.format(self.base_url))
+            return None
+        except RequestException:  # 父类错误
+            print('the url ({}) Error'.format(self.base_url))
+            return None
 
+    @staticmethod
+    def find_url(msg=''):
+        regex = re.compile('[a-zA-Z]+://\S*')
+        result = re.findall(regex, msg)
+        print('find url:\n', result)
+        print('find down, total url: {}'.format(len(result)))
+        return result
 
-def parse_url(msg):
-    regex = re.compile('[A-Za-z]+://\S*')
-    result = re.findall(regex, msg)
-    print('find all url:\n', result)
-    print('find all url down, total: {}'.format(len(result)))
-    return result
-
-
-@display_info
-def main():
-    url = 'http://www.baidu.com/'
-    # 获取网页源代码
-    result = get_web_page(url)
-    if result:
-        # 读取网页，筛选出URL
-        url = parse_url(result)
-        # 用json格式保存
-        record_json_data(msg=url)
-        # 读取json文件
-        # record_json_data(do_read=True)
-    else:
-        print('The URL is no such find')
-    return url
+    @staticmethod
+    def main():
+        source = crawler.get_web_page(purpose=GET)
+        if source:
+            # 筛选出网页里的url
+            crawler.find_url(source.text)
 
 
 if __name__ == '__main__':
-    main()
+    crawler = Crawler(url='https://www.baidu.com')
+    crawler.main()
