@@ -1,11 +1,6 @@
-import time
-import datetime
 import re
-import json
 import requests
 from requests.exceptions import ReadTimeout, ConnectionError, RequestException
-from multiprocessing import Pool
-from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 from requests.auth import HTTPBasicAuth
 
