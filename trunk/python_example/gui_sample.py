@@ -38,14 +38,15 @@ class Gui(object):
     def __init__(self):
         self.root = tk.Tk()
         self.root.title('Gui sample')
+        # 设置界面居中
         self.set_window_center(width=720, height=410)
         # 显示一个文本或图象
         self.label = tk.Label(self.root, text="Label is here")
-        # 文本输入域
+        # 单行文本输入域
         self.input = tk.StringVar()
         self.entry = tk.Entry(self.root, textvariable=self.input)
         self.input.set('Entry is here')
-        # 格式化文本显示。允许你用不同的样式和属性来显示和编辑文本。同时支持内嵌图象和窗口。
+        # 多行文本输入域，允许你用不同的样式和属性来显示和编辑文本。同时支持内嵌图象和窗口。
         self.text = tk.Text(self.root)
         self.text.insert(tk.END, 'Test is here')
         # 执行所有窗口部件
