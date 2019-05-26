@@ -5,12 +5,14 @@ import multiprocessing
 
 
 def sleep_test(sleep):
+    # 执行测试
     print('start {} loop: '.format(sleep), datetime.datetime.now())
     time.sleep(sleep)
     print('loop {} done: '.format(sleep), datetime.datetime.now())
 
 
 def thread_loop(index, sleep_list):
+    # 添加多线程
     print('start thread {} time: '.format(index), datetime.datetime.now())
     loops = range(len(sleep_list))
     threads = []
