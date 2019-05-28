@@ -12,7 +12,6 @@ from requests.auth import HTTPBasicAuth
 GET = 'get'
 POST = 'post'
 
-
 class Crawler(object):
 
     def __init__(self, url=''):
