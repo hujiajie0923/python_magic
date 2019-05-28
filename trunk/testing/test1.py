@@ -13,7 +13,6 @@ GET = 'get'
 POST = 'post'
 
 class Crawler(object):
-
     def __init__(self, url=''):
         self.base_url = url
 
